@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demon Bot — Ultimate Discord Protection</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ===== RESET & GLOBAL ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+
+        body {
+            background: #0b0c10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #e5e9f0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== LOADING SCREEN (JARVIS STYLE) ===== */
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0b0c10;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .jarvis-loader {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .jarvis-loader .ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #ff4d4d;
+            border-bottom-color: #ff4d4d;
+            animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+        .jarvis-loader .ring:nth-child(2) {
+            width: 70%;
+            height: 70%;
+            border-top-color: #ff9999;
+            border-bottom-color: #ff9999;
+            animation: spin 2s reverse infinite;
+        }
+        .jarvis-loader .ring:nth-child(3) {
+            width: 40%;
+            height: 40%;
+            border-top-color: #ffcccc;
+            border-bottom-color: #ffcccc;
+            animation: spin 1s infinite;
+        }
+        .jarvis-loader .core {
+            width: 15px;
+            height: 15px;
+            background: #ff4d4d;
+            border-radius: 50%;
+            box-shadow: 0 0 30px #ff4d4d;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+        }
+        #loading-screen p {
+            margin-top: 30px;
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: #ffb3b3;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px #ff4d4d;
+        }
+
+        /* ===== JARVIS-STYLE BACKGROUND (PARTICLE NETWORK) ===== */
+        #jarvis-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            width: 100%;
+            flex: 1;
+            backdrop-filter: blur(2px);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        /* ===== ARRIVAL ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-item {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        .fade-item:nth-child(1) { animation-delay: 0.2s; }
+        .fade-item:nth-child(2) { animation-delay: 0.4s; }
+        .fade-item:nth-child(3) { animation-delay: 0.6s; }
+        .fade-item:nth-child(4) { animation-delay: 0.8s; }
+
+        /* ===== HEADER ===== */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            padding: 1rem 1.5rem;
+            background: rgba(10, 15, 25, 0.6);
+            border-radius: 60px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 70, 70, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .logo i {
+            color: #ff4d4d;
+            text-shadow: 0 0 15px #ff4d4d;
+            font-size: 2.3rem;
+        }
+
+        .logo span {
+            background: linear-gradient(135deg, #fff, #ffb3b3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Hamburger icon */
+        .menu-icon {
+            font-size: 2.2rem;
+            color: #ff4d4d;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-left: auto;
+            margin-right: 1rem;
+        }
+        .menu-icon:hover {
+            text-shadow: 0 0 15px #ff4d4d;
+            transform: scale(1.1);
+        }
+
+        /* Live counter */
+        .live-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            border: 1px solid #ff4d4d;
+            font-size: 1.2rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .live-counter i {
+            color: #ff4d4d;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        /* ===== SIDE PANEL (OFF-CANVAS) ===== */
+        .side-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 300px;
+            height: 100%;
+            background: rgba(15, 20, 30, 0.98);
+            backdrop-filter: blur(15px);
+            border-left: 2px solid #ff4d4d;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+        }
+        .side-panel.open {
+            right: 0;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #ff4d4d;
+            padding-bottom: 1rem;
+        }
+        .panel-header h3 {
+            color: #ffb3b3;
+            font-size: 1.8rem;
+        }
+        .close-panel {
+            font-size: 2rem;
+            color: #ff4d4d;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .close-panel:hover {
+            transform: rotate(90deg);
+        }
+        .panel-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            flex: 1;
+        }
+        .panel-nav a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            transition: 0.2s;
+            border-left: 4px solid transparent;
+            background: rgba(255, 77, 77, 0.05);
+        }
+        .panel-nav a:hover {
+            background: rgba(255, 77, 77, 0.2);
+            border-left-color: #ff4d4d;
+            color: white;
+        }
+        .panel-nav .support-btn {
+            background: #ff4d4d;
+            color: white;
+            text-align: center;
+            border-left: none;
+            margin-top: 1rem;
+        }
+        .panel-nav .support-btn:hover {
+            background: #ff6666;
+        }
+        .panel-footer {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #8892b0;
+            text-align: center;
+            border-top: 1px solid rgba(255,77,77,0.3);
+            padding-top: 1rem;
+        }
+
+        /* Backdrop overlay */
+        .panel-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 9999;
+            display: none;
+        }
+        .panel-backdrop.show {
+            display: block;
+        }
+
+        /* ===== PAGE SECTIONS (TARGET-BASED SWITCHING) ===== */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page:target {
+            display: block;
+        }
+
+        body:not(:has(:target)) #home {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== CARDS & UI (unchanged) ===== */
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #ffaaaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            min-height: 5rem;
+        }
+
+        .typewriter {
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 3px solid #ff4d4d;
+            animation: blinkCursor 0.75s step-end infinite;
+        }
+        @keyframes blinkCursor {
+            from, to { border-color: transparent; }
+            50% { border-color: #ff4d4d; }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #b0b9d0;
+            max-width: 700px;
+            margin-bottom: 2.5rem;
+            border-left: 4px solid #ff4d4d;
+            padding-left: 1.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: rgba(20, 25, 40, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 77, 77, 0.25);
+            border-radius: 32px;
+            padding: 2rem 1.5rem;
+            transition: 0.2s;
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-card:hover {
+            border-color: #ff4d4d;
+            transform: translateY(-6px);
+            box-shadow: 0 30px 40px -12px #ff4d4d30;
+        }
+
+        .feature-icon {
+            font-size: 2.8rem;
+            color: #ff4d4d;
+            margin-bottom: 1.3rem;
+            filter: drop-shadow(0 0 10px #ff4d4d);
+        }
+
+        .feature-card h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: #b6c0d0;
+            margin-bottom: 1.5rem;
+        }
+
+        .cmd-badge {
+            display: inline-block;
+            background: #1e2538;
+            border-radius: 30px;
+            padding: 0.3rem 1rem;
+            font-family: monospace;
+            border: 1px solid #ff4d4d70;
+            color: #ffcaca;
+            font-size: 0.9rem;
+        }
+
+        .invite-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: linear-gradient(145deg, #ff4d4d, #cc2e2e);
+            color: white;
+            font-weight: 700;
+            font-size: 1.4rem;
+            padding: 1.2rem 3rem;
+            border-radius: 60px;
+            text-decoration: none;
+            box-shadow: 0 20px 30px -8px #ff4d4d;
+            transition: 0.2s;
+            border: 1px solid #ffb3b3;
+            margin: 1.5rem 0;
+        }
+
+        .invite-button:hover {
+            background: linear-gradient(145deg, #ff6666, #e63939);
+            box-shadow: 0 25px 40px -8px #ff4d4d;
+            transform: scale(1.02);
+        }
+
+        .invite-button i {
+            font-size: 2rem;
+        }
+
+        .command-list {
+            list-style: none;
+            margin-top: 2rem;
+        }
+
+        .command-list li {
+            background: rgba(0, 0, 0, 0.3);
+            margin: 0.8rem 0;
+            padding: 1rem 1.5rem;
+            border-radius: 40px;
+            border-left: 5px solid #ff4d4d;
+            font-family: monospace;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .command-list i {
+            color: #ff4d4d;
+            width: 30px;
+            text-align: center;
+        }
+
+        /* Commands grid */
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .command-category {
+            background: rgba(255, 77, 77, 0.1);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            border-radius: 24px;
+            padding: 1.5rem;
+            transition: 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .command-category:hover {
+            border-color: #ff4d4d;
+            transform: scale(1.02);
+            background: rgba(255, 77, 77, 0.15);
+        }
+        .command-category i {
+            font-size: 2rem;
+            color: #ff4d4d;
+            margin-bottom: 0.8rem;
+        }
+        .command-category h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+        .command-category p {
+            color: #b0b9d0;
+            font-size: 0.9rem;
+        }
+
+        /* Credits page specific */
+        .credits-grid {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        .credit-card {
+            background: rgba(255, 77, 77, 0.1);
+            border: 1px solid #ff4d4d;
+            border-radius: 32px;
+            padding: 2rem;
+            flex: 1 1 250px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        .credit-card i {
+            font-size: 3rem;
+            color: #ff4d4d;
+            margin-bottom: 1rem;
+        }
+        .credit-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        .credit-card p {
+            color: #ffb3b3;
+            font-size: 1.2rem;
+        }
+        .contact-row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+        .contact-item {
+            background: rgba(0,0,0,0.4);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            border-left: 4px solid #ff4d4d;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 77, 77, 0.3);
+            color: #8892b0;
+        }
+
+        @media (max-width: 700px) {
+            h1 { font-size: 2.5rem; }
+            .typewriter { white-space: normal; }
+            .live-counter { font-size: 1rem; padding: 0.4rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen (Jarvis style) -->
+    <div id="loading-screen">
+        <div class="jarvis-loader">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="core"></div>
+        </div>
+        <p>Demon Loading...</p>
+    </div>
+
+    <!-- Jarvis-style Background Canvas -->
+    <canvas id="jarvis-bg"></canvas>
+
+    <!-- Side Panel & Backdrop -->
+    <div class="panel-backdrop" id="panelBackdrop"></div>
+    <div class="side-panel" id="sidePanel">
+        <div class="panel-header">
+            <h3>Menu</h3>
+            <div class="close-panel" id="closePanel"><i class="fas fa-times"></i></div>
+        </div>
+        <div class="panel-nav">
+            <a href="#home"><i class="fas fa-home"></i> Home</a>
+            <a href="#antinuke"><i class="fas fa-shield-halved"></i> Anti-Nuke</a>
+            <a href="#moderation"><i class="fas fa-gavel"></i> Moderation</a>
+            <a href="#community"><i class="fas fa-users"></i> Community</a>
+            <a href="#commands"><i class="fas fa-terminal"></i> Commands</a>
+            <a href="#about"><i class="fas fa-info-circle"></i> About</a>
+            <a href="#credits"><i class="fas fa-star"></i> Credits</a>
+            <a href="https://discord.gg/azczcRdgaQ" target="_blank" class="support-btn"><i class="fab fa-discord"></i> Support</a>
+        </div>
+        <div class="panel-footer">
+            <p>Demon Bot • Ultimate Protection</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="fade-item">
+            <div class="logo">
+                <i class="fas fa-dragon"></i>
+                <span>DEMON</span>
+            </div>
+            
+            <!-- Hamburger menu icon -->
+            <div class="menu-icon" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <!-- Live Server Counter -->
+            <div class="live-counter" id="server-count">
+                <i class="fas fa-circle"></i>
+                <span id="count-value">12,345</span> servers
+            </div>
+        </header>
+
+        <!-- HOME PAGE -->
+        <section id="home" class="page">
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 2rem 0;">
+                <h1 class="fade-item" id="typewriter-title"></h1>
+                <div class="subtitle fade-item" style="text-align: center; border-left: none; border-bottom: 2px solid #ff4d4d; padding-bottom: 0.5rem;">
+                    The only defense you need against Discord nukes & raids
+                </div>
+                <a href="https://discord.com/oauth2/authorize?client_id=1094230281361301584&permissions=8&scope=bot+applications.commands" class="invite-button fade-item" target="_blank">
+                    <i class="fab fa-discord"></i> ADD TO SERVER
+                </a>
+                <div class="fade-item" style="margin-top: 2rem; max-width: 800px;">
+                    <p style="font-size: 1.3rem; color: #ccd6f6;">⚡ Ultra-fast anti-nuke · AutoMod · Giveaways · Tickets ⚡</p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card fade-item">
+                        <div class="feature-icon"><i class="fas fa-shield-virus"></i></div>
+                        <h3>Anti-Nuke</h3>
+                        <p>Blocks mass channel/role deletion, mass bans, webhook abuse — in real time.</p>
+                        <span class="cmd-badge">.antinuke enable</span>
+                    </div>
+                    <div class="feature-card fade-item">
+                        <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                        <h3>AutoMod</h3>
+                        <p>Profanity & spam filters, automatic punishment, and word blacklists.</p>
+                        <span class="cmd-badge">.automod</span>
+                    </div>
+                    <div class="feature-card fade-item">
+                        <div class="feature-icon"><i class="fas fa-ticket"></i></div>
+                        <h3>Ticket System</h3>
+                        <p>Powerful support tickets with transcripts and multi‑staff handling.</p>
+                        <span class="cmd-badge">.ticket setup</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANTI-NUKE PAGE -->
+        <section id="antinuke" class="page">
+            <h1 class="fade-item"><i class="fas fa-shield-halved"></i> Anti-Nuke</h1>
+            <div class="subtitle fade-item">Military‑grade protection that stops raids before they start</div>
+            <!-- ... content same as before ... -->
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 300px;">
+                    <div class="feature-card fade-item" style="margin-bottom: 2rem;">
+                        <i class="fas fa-bolt feature-icon"></i>
+                        <h3>Real‑time attack blocking</h3>
+                        <p>Detects mass channel/role creation, deletion, mass kicks/bans, and webhook abuse. Bans the attacker automatically.</p>
+                        <ul style="margin-top: 1.5rem; list-style: none;">
+                            <li>✓ <strong>Channel nuke</strong> — deletion of 5+ channels in 10s triggers lockdown</li>
+                            <li>✓ <strong>Role nuke</strong> — automatic role purge prevention</li>
+                            <li>✓ <strong>Member prunes</strong> — stops mass bans/kicks instantly</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card fade-item">
+                        <i class="fas fa-user-lock feature-icon"></i>
+                        <h3>Whitelist & Owners</h3>
+                        <p>Protect your staff from false flags. Use these commands:</p>
+                        <div style="background: #0e121f; border-radius: 20px; padding: 1rem; margin: 1rem 0;">
+                            <code style="display: block; color: #ffb3b3;">.antinuke whitelist add @user</code>
+                            <code style="display: block; color: #ffb3b3; margin-top: 0.5rem;">.antinuke owner add @user</code>
+                        </div>
+                        <p>Whitelisted members bypass all anti-nuke checks. Owners gain full control.</p>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                    <div style="background: rgba(255, 77, 77, 0.1); border-radius: 30px; padding: 2rem; border: 1px solid #ff4d4d;" class="fade-item">
+                        <h3 style="color: white;">⚡ PUNISHMENT</h3>
+                        <p style="font-size: 2rem; font-weight: 800;">INSTANT BAN</p>
+                        <p>Attackers are removed before they can destroy your server.</p>
+                        <hr style="border-color: #ff4d4d; margin: 1.5rem 0;">
+                        <p><i class="fas fa-check-circle" style="color: #4dff4d;"></i> 24/7 protection</p>
+                        <p><i class="fas fa-check-circle" style="color: #4dff4d;"></i> 0ms reaction time</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODERATION PAGE -->
+        <section id="moderation" class="page">
+            <h1 class="fade-item"><i class="fas fa-gavel"></i> Moderation Suite</h1>
+            <div class="subtitle fade-item">Full control with automated & manual tools</div>
+            <!-- ... content ... -->
+            <div class="feature-grid">
+                <div class="feature-card fade-item">
+                    <i class="fas fa-microphone-slash feature-icon"></i>
+                    <h3>Mute / Kick / Ban</h3>
+                    <p>Traditional moderation with modern flair.</p>
+                    <div><span class="cmd-badge">.ban @user</span> <span class="cmd-badge">.mute 10m</span></div>
+                </div>
+                <div class="feature-card fade-item">
+                    <i class="fas fa-message-slash feature-icon"></i>
+                    <h3>AutoMod</h3>
+                    <p>Block invites, spam, and offensive words automatically.</p>
+                    <div><span class="cmd-badge">.automod profanity on</span></div>
+                </div>
+                <div class="feature-card fade-item">
+                    <i class="fas fa-broom feature-icon"></i>
+                    <h3>Purge & Clean</h3>
+                    <p>Bulk delete messages with powerful filters.</p>
+                    <div><span class="cmd-badge">.purge 50</span> <span class="cmd-badge">.clean @user</span></div>
+                </div>
+            </div>
+            <h2 style="margin: 3rem 0 1rem;">📋 All Commands</h2>
+            <ul class="command-list">
+                <li class="fade-item"><i class="fas fa-hammer"></i> <code>.ban @user [reason]</code> – ban member</li>
+                <li class="fade-item"><i class="fas fa-gavel"></i> <code>.kick @user [reason]</code> – kick member</li>
+                <li class="fade-item"><i class="fas fa-clock"></i> <code>.mute @user 1h</code> – timeout member</li>
+                <li class="fade-item"><i class="fas fa-eraser"></i> <code>.purge 100</code> – delete 100 messages</li>
+                <li class="fade-item"><i class="fas fa-robot"></i> <code>.automod spam sensitivity 5</code> – adjust filter</li>
+                <li class="fade-item"><i class="fas fa-list"></i> <code>.warnings @user</code> – view warnings</li>
+            </ul>
+        </section>
+
+        <!-- COMMUNITY PAGE -->
+        <section id="community" class="page">
+            <h1 class="fade-item"><i class="fas fa-heart"></i> Community & Engagement</h1>
+            <div class="subtitle fade-item">Keep your members entertained and supported</div>
+            <!-- ... content ... -->
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="flex: 1;">
+                    <div class="feature-card fade-item">
+                        <i class="fas fa-gift feature-icon"></i>
+                        <h3>Giveaways</h3>
+                        <p>Create beautiful giveaways with multiple winners and requirements.</p>
+                        <span class="cmd-badge">.giveaway start 1h 5 winners 🎁</span>
+                    </div>
+                    <div class="feature-card fade-item">
+                        <i class="fas fa-ticket feature-icon"></i>
+                        <h3>Ticket Tool</h3>
+                        <p>Advanced ticket system with categories, transcripts, and claim system.</p>
+                        <span class="cmd-badge">.ticket panel #support</span>
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <div class="feature-card fade-item">
+                        <i class="fas fa-wave-square feature-icon"></i>
+                        <h3>Welcome & Goodbye</h3>
+                        <p>Customizable join/leave messages with images and statistics.</p>
+                        <span class="cmd-badge">.welcome channel #welcome</span>
+                    </div>
+                    <div class="feature-card fade-item">
+                        <i class="fas fa-dice feature-icon"></i>
+                        <h3>Fun & Games</h3>
+                        <p>Truth or dare, rps, memes, and jokes to lighten the mood.</p>
+                        <span class="cmd-badge">.truth</span> <span class="cmd-badge">.dare</span> <span class="cmd-badge">.meme</span>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 2rem; background: rgba(255, 77, 77, 0.15); border-radius: 40px; padding: 2rem; text-align: center;" class="fade-item">
+                <i class="fas fa-star" style="color: gold;"></i>
+                <p style="font-size: 1.4rem;">Self‑roles, reaction roles, leveling system and more!</p>
+                <span class="cmd-badge">.selfroles create</span>
+            </div>
+        </section>
+
+        <!-- COMMANDS PAGE -->
+        <section id="commands" class="page">
+            <h1 class="fade-item"><i class="fas fa-terminal"></i> Command Categories</h1>
+            <div class="subtitle fade-item">Explore all of Demon's powerful command modules</div>
+            <div class="commands-grid">
+                <!-- All categories (same as before) -->
+                <div class="command-category fade-item"><i class="fas fa-microphone-alt"></i><h3>VC Management</h3><p>Dynamic voice channel automation.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-sliders-h"></i><h3>Voice Settings</h3><p>Direct voice channel controls.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-door-open"></i><h3>Welcome System</h3><p>Customizable greeting and exit system.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-envelope-open-text"></i><h3>Invite Systems</h3><p>Direct message join triggers.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-chart-line"></i><h3>Leveling Module</h3><p>Active member rewards and XP tracking.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-images"></i><h3>Media Hub</h3><p>Discover profile art and media content.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-crown"></i><h3>Premium Benefits</h3><p>Unlock exclusive bot features and perks.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-icons"></i><h3>Reaction UI</h3><p>Interactive role assignment system.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-ban"></i><h3>Restriction Settings</h3><p>Manage bypassed channels and restricted users.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-user-tag"></i><h3>Role Management</h3><p>Advanced server roles configuration.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-user-check"></i><h3>Self Assignments</h3><p>Interactive roles by activity.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-toolbox"></i><h3>Staff Toolkit</h3><p>Powerful moderation tools for admins.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-headset"></i><h3>Ticket Support</h3><p>Professional customer support system.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-bullhorn"></i><h3>Announcement Tools</h3><p>Broadcast messages and detailed embeds.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-shield-alt"></i><h3>Anti-Raid System</h3><p>Extreme security measures for raid attacks.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-shield-virus"></i><h3>Antinuke System</h3><p>Secure your server with high-end safety filters.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-reply-all"></i><h3>Auto Responder</h3><p>Dynamic responses for specific keywords.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-robot"></i><h3>Automod</h3><p>View commands in this category.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-tasks"></i><h3>Channel Setup</h3><p>Advanced voice configuration.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-cogs"></i><h3>Core Utilities</h3><p>Advanced bot configuration tools.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-info-circle"></i><h3>General Commands</h3><p>Standard utility and bot info.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-gift"></i><h3>Giveaway System</h3><p>Host and manage server-wide events.</p></div>
+                <div class="command-category fade-item"><i class="fas fa-chart-pie"></i><h3>Information Desk</h3><p>Detailed bot and server statistics.</p></div>
+            </div>
+        </section>
+
+        <!-- ABOUT PAGE -->
+        <section id="about" class="page">
+            <h1 class="fade-item"><i class="fas fa-info-circle"></i> About Demon Bot</h1>
+            <div class="subtitle fade-item">The ultimate security and moderation solution for Discord</div>
+            <div style="background: rgba(20, 25, 40, 0.7); backdrop-filter: blur(8px); border-radius: 32px; padding: 2.5rem; border: 1px solid rgba(255,77,77,0.3);">
+                <p class="fade-item" style="font-size: 1.2rem; margin-bottom: 1.5rem;">Demon Bot is a powerful, all-in-one Discord bot designed to protect your server from raids, nukes, and spam while providing extensive moderation and community engagement tools. With lightning-fast anti-nuke capabilities, it detects and blocks mass channel/role deletions, mass bans, and webhook abuse in real time.</p>
+                <p class="fade-item" style="font-size: 1.2rem; margin-bottom: 1.5rem;">Beyond security, Demon offers a complete suite of features: AutoMod with profanity and spam filters, a versatile ticket system, customizable welcome messages, giveaways, leveling, reaction roles, and much more. Server administrators can fine-tune every aspect with an intuitive command structure and whitelist system.</p>
+                <p class="fade-item" style="font-size: 1.2rem;">Whether you're running a small community or a large gaming server, Demon Bot ensures your Discord stays safe, organized, and engaging. Join our support server for assistance or to suggest new features!</p>
+                <div class="fade-item" style="margin-top: 2rem; text-align: center;">
+                    <a href="https://discord.gg/azczcRdgaQ" target="_blank" class="invite-button" style="font-size: 1.2rem; padding: 1rem 2.5rem;"><i class="fab fa-discord"></i> Join Support Server</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- CREDITS PAGE -->
+        <section id="credits" class="page">
+            <h1 class="fade-item"><i class="fas fa-star"></i> Credits</h1>
+            <div class="subtitle fade-item">The minds behind Demon Bot</div>
+            <div class="credits-grid">
+                <div class="credit-card fade-item">
+                    <i class="fas fa-code"></i>
+                    <h3>demon._.dev</h3>
+                    <p>Bot Owner & Lead Developer</p>
+                    <p style="margin-top: 1rem; font-size: 1rem;"><i class="fab fa-discord"></i> demon._.dev</p>
+                </div>
+                <div class="credit-card fade-item">
+                    <i class="fas fa-paint-brush"></i>
+                    <h3>platinum_titans</h3>
+                    <p>Website Designer & Contributor</p>
+                    <p style="margin-top: 1rem; font-size: 1rem;"><i class="fab fa-discord"></i> platinum_titans</p>
+                </div>
+            </div>
+            <div class="contact-row fade-item">
+                <div class="contact-item"><i class="fab fa-discord"></i> demon._.dev</div>
+                <div class="contact-item"><i class="fab fa-discord"></i> platinum_titans</div>
+            </div>
+            <p class="fade-item" style="text-align: center; max-width: 700px; margin: 2rem auto; color: #b0b9d0;">You can contact us directly on Discord using the usernames above. We're always open to feedback and suggestions!</p>
+        </section>
+
+        <footer>
+            <p>⚠️ Demon Bot — Ultimate Protection. Not affiliated with Discord.</p>
+            <p style="margin-top: 0.5rem;">
+                <a href="#home" style="color: #ff9999;">Home</a> · 
+                <a href="#antinuke" style="color: #ff9999;">Anti-Nuke</a> · 
+                <a href="#moderation" style="color: #ff9999;">Moderation</a> · 
+                <a href="#community" style="color: #ff9999;">Community</a> · 
+                <a href="#commands" style="color: #ff9999;">Commands</a> · 
+                <a href="#about" style="color: #ff9999;">About</a> · 
+                <a href="#credits" style="color: #ff9999;">Credits</a>
+            </p>
+            <p style="margin-top: 1rem;">
+                <a href="https://discord.com/oauth2/authorize?client_id=1094230281361301584&permissions=8&scope=bot+applications.commands" target="_blank" style="color: white; background: #ff4d4d; padding: 0.3rem 1.5rem; border-radius: 30px; text-decoration: none;">➕ Invite Demon</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        (function() {
+            // Loading screen
+            const loadingScreen = document.getElementById('loading-screen');
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                }, 800);
+            });
+
+            // Jarvis-style particle network background
+            const canvas = document.getElementById('jarvis-bg');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const particleCount = 80;
+            const connectionDistance = 150;
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        radius: 2 + Math.random() * 3
+                    });
+                }
+            }
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                initParticles();
+            }
+
+            function drawParticles() {
+                ctx.clearRect(0, 0, width, height);
+                
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                    
+                    p.x = Math.max(0, Math.min(width, p.x));
+                    p.y = Math.max(0, Math.min(height, p.y));
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 100, 100, 0.8)';
+                    ctx.shadowColor = '#ff4d4d';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+                
+                ctx.strokeStyle = 'rgba(255, 77, 77, 0.15)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let dx = particles[i].x - particles[j].x;
+                        let dy = particles[i].y - particles[j].y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < connectionDistance) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(255, 77, 77, ${0.2 * (1 - distance / connectionDistance)})`;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                
+                requestAnimationFrame(drawParticles);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            drawParticles();
+
+            // Live server counter
+            const countElement = document.getElementById('count-value');
+            let currentCount = 12345;
+            const targetCount = 15420;
+            const increment = Math.ceil((targetCount - currentCount) / 100);
+            function updateCounter() {
+                if (currentCount < targetCount) {
+                    currentCount += increment;
+                    if (currentCount > targetCount) currentCount = targetCount;
+                    countElement.innerText = currentCount.toLocaleString();
+                    setTimeout(updateCounter, 2000);
+                } else {
+                    setInterval(() => {
+                        currentCount += Math.floor(Math.random() * 3) - 1;
+                        if (currentCount < targetCount - 100) currentCount = targetCount - 50;
+                        countElement.innerText = currentCount.toLocaleString();
+                    }, 5000);
+                }
+            }
+            updateCounter();
+
+            // Typewriter
+            const titleElement = document.getElementById('typewriter-title');
+            const fullText = 'Demon Bot';
+            let index = 0;
+            function typeWriter() {
+                if (index < fullText.length) {
+                    titleElement.innerHTML = fullText.substring(0, index + 1) + '<span class="typewriter"></span>';
+                    index++;
+                    setTimeout(typeWriter, 150);
+                } else {
+                    titleElement.innerHTML = fullText + '<span class="typewriter"></span>';
+                }
+            }
+            function checkHomeVisible() {
+                if (window.location.hash === '#home' || !window.location.hash) {
+                    if (index === 0) typeWriter();
+                }
+            }
+            window.addEventListener('load', checkHomeVisible);
+            window.addEventListener('hashchange', function() {
+                if (window.location.hash === '#home' || !window.location.hash) {
+                    index = 0;
+                    titleElement.innerHTML = '';
+                    typeWriter();
+                }
+            });
+
+            // Side panel controls
+            const menuToggle = document.getElementById('menuToggle');
+            const sidePanel = document.getElementById('sidePanel');
+            const closePanel = document.getElementById('closePanel');
+            const backdrop = document.getElementById('panelBackdrop');
+
+            function openPanel() {
+                sidePanel.classList.add('open');
+                backdrop.classList.add('show');
+            }
+            function closePanelFunc() {
+                sidePanel.classList.remove('open');
+                backdrop.classList.remove('show');
+            }
+
+            menuToggle.addEventListener('click', openPanel);
+            closePanel.addEventListener('click', closePanelFunc);
+            backdrop.addEventListener('click', closePanelFunc);
+
+            // Close panel after clicking a link (for hash links)
+            document.querySelectorAll('.panel-nav a').forEach(link => {
+                link.addEventListener('click', function() {
+                    closePanelFunc();
+                });
+            });
+
+            // Nav active highlight (for panel links)
+            const panelLinks = document.querySelectorAll('.panel-nav a:not(.support-btn)');
+            function updateActive() {
+                const hash = window.location.hash || '#home';
+                panelLinks.forEach(link => {
+                    if (link.getAttribute('href') === hash) {
+                        link.style.background = 'rgba(255,77,77,0.2)';
+                        link.style.borderLeftColor = '#ff4d4d';
+                    } else {
+                        link.style.background = '';
+                        link.style.borderLeftColor = 'transparent';
+                    }
+                });
+            }
+            window.addEventListener('hashchange', updateActive);
+            window.addEventListener('load', updateActive);
+            updateActive();
+        })();
+    </script>
+</body>
+</html>
